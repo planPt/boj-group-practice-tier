@@ -72,3 +72,7 @@ https://www.acmicpc.net/group/practice/view/*
 - [Tampermonkey 사용자 스크립트 허용](https://www.tampermonkey.net/faq.php?locale=en&q=Q209)
 - [Tampermonkey 업데이트 메타데이터](https://www.tampermonkey.net/documentation.php?locale=en&q=update_url)
 - [배포 관리 안내](MAINTAINING.md)
+
+## 라이선스
+
+이 저장소의 스크립트와 문서는 [MIT License](LICENSE)로 배포합니다. Copyright (c) 2024-2026 planPt. 수정·재배포할 때 저작권과 라이선스 고지를 유지하세요. solved.ac 등 외부 서비스의 데이터·아이콘과 이용 약관은 해당 권리자 및 서비스의 조건을 따릅니다.

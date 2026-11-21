@@ -34,3 +34,6 @@
 소스 저장소: https://github.com/planPt/boj-group-practice-tier
 오류 제보: https://github.com/planPt/boj-group-practice-tier/issues
 문제 번호와 오류 문구만 첨부하고 비밀키는 보내지 마세요.
+
+## 라이선스
+MIT License — Copyright (c) 2024-2026 planPt. 수정·재배포 시 저작권과 라이선스 고지를 유지하세요. 라이선스 전문은 스크립트와 https://github.com/planPt/boj-group-practice-tier/blob/main/LICENSE 에 포함되어 있습니다. 외부 서비스의 데이터·아이콘 및 API 이용 조건에는 해당 서비스의 조건이 적용됩니다.

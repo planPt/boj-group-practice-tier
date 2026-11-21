@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         BOJ Group Practice Tier Display
 // @namespace    http://tampermonkey.net/
-// @version      2026.11.21.3
+// @version      2026.11.21.4
 // @description  BOJ 그룹 연습에 solved.ac v4 난이도·레이팅·기여 부족 상태 표시
 // @author       planPt
+// @license      MIT
+// @copyright    2024-2026 planPt
 // @match        https://www.acmicpc.net/group/practice/view/*
 // @match        https://acmicpc.net/group/practice/view/*
 // @homepageURL  https://github.com/planPt/boj-group-practice-tier
