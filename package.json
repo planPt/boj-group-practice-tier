@@ -1,0 +1,13 @@
+{
+  "name": "boj-group-practice-tier",
+  "version": "2026.11.21.5",
+  "private": true,
+  "description": "BOJ group practice tiers and rating status userscript",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/cache.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

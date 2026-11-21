@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BOJ Group Practice Tier Display
 // @namespace    http://tampermonkey.net/
-// @version      2026.11.21.4
+// @version      2026.11.21.5
 // @description  BOJ 그룹 연습에 solved.ac v4 난이도·레이팅·기여 부족 상태 표시
 // @author       planPt
 // @license      MIT

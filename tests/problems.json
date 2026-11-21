@@ -1,0 +1,194 @@
+[
+  {
+    "problemId": 11641,
+    "subId": "",
+    "level": 13,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 6,
+    "votedUserCount": 8,
+    "solvedUserCount": 19,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "11641",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 4547,
+    "subId": "",
+    "level": 0,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 0,
+    "votedUserCount": 0,
+    "solvedUserCount": 0,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "4547",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 25396,
+    "subId": "",
+    "level": 24,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 7,
+    "votedUserCount": 7,
+    "solvedUserCount": 18,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "25396",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 4537,
+    "subId": "",
+    "level": 0,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 0,
+    "votedUserCount": 0,
+    "solvedUserCount": 1,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "4537",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 1488,
+    "subId": "",
+    "level": 12,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 19,
+    "votedUserCount": 19,
+    "solvedUserCount": 88,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "1488",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 11609,
+    "subId": "",
+    "level": 6,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 19,
+    "votedUserCount": 20,
+    "solvedUserCount": 233,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "11609",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 31333,
+    "subId": "",
+    "level": 23,
+    "givesNoRating": true,
+    "isStandard": false,
+    "noRatingReasons": [
+      "unsettled"
+    ],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 2,
+    "votedUserCount": 2,
+    "solvedUserCount": 2,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "31333",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 11927,
+    "subId": "",
+    "level": 0,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 0,
+    "votedUserCount": 0,
+    "solvedUserCount": 5,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "11927",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 23030,
+    "subId": "",
+    "level": 13,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 21,
+    "votedUserCount": 22,
+    "solvedUserCount": 131,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "23030",
+        "subId": ""
+      }
+    ]
+  },
+  {
+    "problemId": 11957,
+    "subId": "",
+    "level": 13,
+    "givesNoRating": false,
+    "isStandard": false,
+    "noRatingReasons": [],
+    "noRatingWarnings": [],
+    "effectiveVoteCount": 9,
+    "votedUserCount": 10,
+    "solvedUserCount": 42,
+    "judgeIds": [
+      {
+        "ojId": "boj",
+        "problemId": "11957",
+        "subId": ""
+      }
+    ]
+  }
+]
