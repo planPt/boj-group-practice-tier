@@ -33,3 +33,12 @@ Tampermonkey가 설치된 코드의 업데이트 주소를 따라 새 코드를 
 단순히 낮은 버전으로 되돌리는 대신 수정된 코드를 더 높은 버전으로 게시합니다. 그래야 기존 사용자의 업데이트 검사에서도 수정본을 발견할 수 있습니다.
 
 사용자 Secret, Tampermonkey 저장소 내보내기, 로컬 설정, 비공개 테스트 화면은 이 저장소에 올리지 않습니다. 공개 오류 제보에서도 키를 요구하지 않습니다.
+
+## Greasy Fork 배포
+
+- 공개 설치 페이지: https://greasyfork.org/ko/scripts/606581-boj-group-practice-tier-display
+- 관리 페이지: https://greasyfork.org/ko/scripts/606581-boj-group-practice-tier-display/admin
+- 소스는 `main/boj-group-practice-tier.user.js`, 설명은 `main/GREASYFORK.ko.txt`를 주기적으로 자동 동기화합니다. 웹훅은 설정하지 않았습니다.
+- 급한 수정은 관리 페이지에서 `설정 업데이트 및 지금 동기화`를 실행하고 공개 버전을 확인합니다.
+- Greasy Fork는 설치 파일의 업데이트 주소를 자체 주소로 바꿉니다. GitHub 기존 설치자의 업데이트 경로는 유지됩니다.
+- 현재 별도의 재배포·수정 라이선스를 부여하지 않았습니다. 라이선스를 추가하려면 작성자 의사를 먼저 확인합니다.

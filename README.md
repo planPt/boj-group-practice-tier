@@ -2,12 +2,12 @@
 
 백준 **그룹 연습**의 문제 목록과 스코어보드에 solved.ac 난이도와 레이팅 상태를 표시하는 Tampermonkey 스크립트입니다. BOJ·solved.ac의 공식 프로그램은 아닙니다.
 
-**[스크립트 설치](https://raw.githubusercontent.com/planPt/boj-group-practice-tier/main/boj-group-practice-tier.user.js)** · [설치·키 발급 상세 안내](INSTALL.ko.txt) · [오류 제보](https://github.com/planPt/boj-group-practice-tier/issues)
+**[Greasy Fork 설치 페이지](https://greasyfork.org/ko/scripts/606581-boj-group-practice-tier-display)** · [GitHub 직접 설치](https://raw.githubusercontent.com/planPt/boj-group-practice-tier/main/boj-group-practice-tier.user.js) · [설치·키 발급 상세 안내](INSTALL.ko.txt) · [오류 제보](https://github.com/planPt/boj-group-practice-tier/issues)
 
 ## 빠른 설치
 
 1. [Tampermonkey](https://www.tampermonkey.net/)를 설치합니다. Chrome 확장 프로그램 관리 → Tampermonkey → 세부정보에서 **사용자 스크립트 허용**을 켭니다.
-2. 위 **스크립트 설치** 링크를 열고 설치합니다. 코드만 보이면 Tampermonkey 대시보드 → 유틸리티의 **URL 가져오기**에 같은 링크를 입력합니다. 또는 새 스크립트에 코드 전체를 붙여넣고 저장합니다.
+2. 위 **Greasy Fork 설치 페이지**에서 설치 버튼을 누릅니다. GitHub 직접 설치도 가능합니다. 코드만 보이면 Tampermonkey 대시보드 → 유틸리티의 **URL 가져오기**에 같은 링크를 입력합니다. 또는 새 스크립트에 코드 전체를 붙여넣고 저장합니다.
 3. [solved.ac Backstage](https://backstage.solved.ac/developer/apps)에서 **본인의 앱**을 만들고, 약관을 확인한 뒤 **Client ID와 Secret**을 발급받습니다. Secret은 최초 발급 시 한 번만 표시됩니다.
 4. 백준 **그룹 연습 보기** 페이지를 새로고침하고 **API 키 설정**을 누릅니다. 또는 해당 백준 탭에서 Tampermonkey 메뉴의 **solved.ac API 키 설정**을 선택합니다.
 5. 본인의 Client ID와 Secret을 차례로 입력합니다. 팀 초대와 OAuth2 설정은 필요하지 않습니다.
@@ -34,6 +34,14 @@ https://www.acmicpc.net/group/practice/view/*
 
 아이콘에 마우스를 올리거나 키보드로 초점을 옮기면 푼 사람, 전체·유효 기여 수, 제외 사유를 볼 수 있습니다. 상태는 solved.ac v4 응답을 사용하며 기여자 수만으로 임의 판정하지 않습니다. BOJ 번호는 응답의 `judgeIds`와 대조합니다.
 
+## 배포와 자동 업데이트
+
+공유할 때는 [Greasy Fork 페이지](https://greasyfork.org/ko/scripts/606581-boj-group-practice-tier-display)를 보내세요. 설치 방법과 개인 API 키 발급 안내가 포함되어 있습니다.
+
+- GitHub에서 설치한 버전은 GitHub의 업데이트 주소를 사용합니다.
+- Greasy Fork에서 설치한 버전은 Greasy Fork에서 업데이트를 받습니다. Greasy Fork는 이 저장소의 `main` 코드와 `GREASYFORK.ko.txt` 설명을 자동 동기화하도록 설정되어 있습니다.
+- 동기화와 사용자 스크립트 관리자의 확인 주기에 따라 반영 지연이 있을 수 있습니다. 기존 GitHub 설치본을 다시 설치할 필요는 없습니다.
+
 ## 기존 수동 설치판에서 갱신
 
 `2026.11.21.1` 등 이전 파일로 설치했다면, **기존 스크립트 항목**의 코드를 이 저장소의 최신 `.user.js` 내용으로 한 번 교체하고 저장하세요. 새 항목을 중복 생성하지 마세요.
@@ -54,7 +62,7 @@ https://www.acmicpc.net/group/practice/view/*
 
 실제 BOJ 그룹 연습 DOM과 solved.ac v4 응답을 대조하고, 번호 매핑·상태 판정·중복 요청·동적 갱신·인증 실패·잘못된 응답·타임아웃 등에 대한 로컬 검사 16개 및 독립 검수를 통과한 실행 코드를 사용합니다. 최초 웹 배포판 `2026.11.21.2`는 이 코드의 배포 메타데이터만 변경했습니다.
 
-이 검증은 모든 사용자 환경에서의 설치·자동 업데이트 완료를 보장하지 않습니다. 오류 제보에는 문제 번호와 오류 문구만 첨부하고 비밀키를 포함하지 마세요.
+사용자의 기존 GitHub 설치본에서 업데이트 확인으로 `2026.11.21.2` → `2026.11.21.3` 갱신도 확인했습니다. 예약된 자동 확인 시점 및 모든 사용자 환경에서의 갱신 완료를 보장하는 것은 아닙니다. 오류 제보에는 문제 번호와 오류 문구만 첨부하고 비밀키를 포함하지 마세요.
 
 ## 참고
 

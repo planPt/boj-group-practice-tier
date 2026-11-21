@@ -1,0 +1,36 @@
+백준 그룹 연습의 문제 목록과 스코어보드에 solved.ac 난이도와 레이팅 상태를 표시합니다. BOJ·solved.ac의 공식 프로그램이 아닙니다.
+
+## 표시 정보
+- 레이팅 반영 대상 / 기여 부족 보류 / 기타 사유 제외 / 제외·보류 / 난이도 미정
+- 아이콘에 마우스를 올리면 푼 사람 수, 전체·유효 기여 수, 제외 사유 표시
+- BOJ 번호와 solved.ac 문제 번호를 judgeIds로 매핑
+- 인증 실패·조회 오류는 문제 상태와 별도로 표시
+
+## 설치와 설정
+1. Tampermonkey를 설치하고 Chrome 확장 프로그램 세부정보에서 ‘사용자 스크립트 허용’을 켭니다.
+2. 이 페이지의 ‘스크립트 설치’ 버튼을 누릅니다.
+3. https://backstage.solved.ac/developer/apps 에서 자신의 앱을 만들고 Client ID와 Secret을 발급받습니다. 약관을 직접 확인하고 동의하세요.
+4. 백준 그룹 연습 보기 페이지를 새로고침합니다.
+5. 페이지의 ‘API 키 설정’ 또는 해당 탭의 Tampermonkey 메뉴 ‘solved.ac API 키 설정’에서 자신의 Client ID와 Secret을 입력합니다.
+
+설정 메뉴는 스크립트 편집기가 아니라 백준 그룹 연습 탭에서 확인합니다. 일반 문제 페이지나 그룹 메인에서는 실행되지 않습니다.
+
+## 키와 개인정보
+- 배포 코드에는 작성자의 실제 Client ID·Secret이 없습니다. 각자 자신의 키를 사용합니다.
+- 키는 Tampermonkey 스크립트 전용 저장소에 저장하고, solved.ac의 고정 HTTPS API로만 보냅니다. 작성자 서버로 전송하지 않습니다.
+- 조회 대상은 문제 정보입니다. BOJ 로그인 쿠키와 풀이 소스는 수집하지 않습니다. 아이콘은 cdn.solved.ac에서 불러옵니다.
+- solved.ac의 발급 화면은 서버 보관을 안내합니다. 이 스크립트는 개인 브라우저에 저장하므로 서버 보관과 같은 보안 수준이 아닙니다. 키를 코드에 넣거나 공유하지 마세요.
+- ‘Include script storage’를 켠 Tampermonkey 백업은 공유하지 마세요. 키가 포함될 수 있습니다.
+- 유출이 의심되면 Backstage에서 키를 폐기하세요. 스크립트 메뉴의 키 삭제는 로컬 저장값만 삭제합니다.
+
+## 요청과 업데이트
+- 5문제씩 묶어 조회하고 요청 간격은 최소 1.6초입니다. 결과는 탭 안에서 5분간 재사용합니다.
+- 탭 사이 캐시는 공유하지 않습니다. 여러 탭과 기기는 같은 앱의 호출 한도를 공유합니다. HTTP 429 응답의 재시도 대기 시간을 존중합니다.
+- Greasy Fork에서 설치한 버전은 Greasy Fork를 통해 업데이트됩니다. 확인 주기는 Tampermonkey 설정에 따릅니다.
+- 기존 동일 스크립트가 있으면 중복 설치하지 말고 기존 항목을 갱신하세요.
+
+## 안내와 오류 제보
+설치·키 발급 상세 안내: https://github.com/planPt/boj-group-practice-tier/blob/main/INSTALL.ko.txt
+소스 저장소: https://github.com/planPt/boj-group-practice-tier
+오류 제보: https://github.com/planPt/boj-group-practice-tier/issues
+문제 번호와 오류 문구만 첨부하고 비밀키는 보내지 마세요.
