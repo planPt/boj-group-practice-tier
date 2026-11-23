@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BOJ Group Practice Tier Display
 // @namespace    http://tampermonkey.net/
-// @version      2026.11.21.5
+// @version      2026.11.23.1
 // @description  BOJ 그룹 연습에 solved.ac v4 난이도·레이팅·기여 부족 상태 표시
 // @author       planPt
 // @license      MIT
@@ -49,7 +49,6 @@ SOFTWARE.
     "use strict";
 
     const API_ORIGIN = "https://solved.ac";
-    const CACHE_LIFETIME_MS = 5 * 60 * 1000;
     const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
     const CACHE_MAX_ENTRIES = 300;
     const CACHE_STORAGE_KEY = "solved-ac-v4-problem-cache-v1";
@@ -206,7 +205,7 @@ SOFTWARE.
                 || !entry.problems.every((problem) => validateProblem(problem)
                     && problem.judgeIds.some((judge) => judge.ojId === "boj" && judge.problemId === entry.id))) continue;
             if ((entries.get(entry.id)?.fetchedAt ?? -1) >= entry.fetchedAt) continue;
-            entries.set(entry.id, { fetchedAt: entry.fetchedAt, expires: entry.fetchedAt + CACHE_LIFETIME_MS,
+            entries.set(entry.id, { fetchedAt: entry.fetchedAt,
                 result: { kind: "success", problems: entry.problems.map(publicProblemFields) } });
         }
         return new Map([...entries].sort((a, b) => b[1].fetchedAt - a[1].fetchedAt).slice(0, CACHE_MAX_ENTRIES));
@@ -222,6 +221,9 @@ SOFTWARE.
     const cache = readStoredCache();
     const failures = new Map();
     const refreshRequestedIds = new Set();
+    const attemptedIds = new Set();
+    // History traversal can reconstruct the document without using BFCache.
+    let automaticLookupAllowed = performance.getEntriesByType?.("navigation")?.[0]?.type !== "back_forward";
     const pendingIds = new Set();
     const inFlightIds = new Set();
     const linkViews = new WeakMap();
@@ -262,6 +264,8 @@ SOFTWARE.
         cache.clear();
         failures.clear();
         refreshRequestedIds.clear();
+        attemptedIds.clear();
+        automaticLookupAllowed = true;
         pendingIds.clear();
         authenticationFailed = false;
         try { GM_deleteValue(CACHE_STORAGE_KEY); } catch { /* Best effort storage cleanup. */ }
@@ -508,25 +512,27 @@ SOFTWARE.
                     for (const [id, matches] of results) {
                         refreshRequestedIds.delete(id);
                         if (matches.length) {
-                            cache.set(id, { fetchedAt, expires: fetchedAt + CACHE_LIFETIME_MS,
+                            cache.set(id, { fetchedAt,
                                 result: { kind: "success", problems: matches.map(publicProblemFields) } });
                             failures.delete(id);
                         } else {
                             // A valid empty response supersedes an old mapping; never keep a false tier.
                             cache.delete(id);
                             removedIds.push(id);
-                            failures.set(id, { failedAt: fetchedAt, retryAt: fetchedAt + CACHE_LIFETIME_MS,
+                            failures.set(id, { failedAt: fetchedAt,
                                 result: { kind: "error", label: "정보 없음", message: `BOJ ${id}에 대응하는 solved.ac 문제를 찾지 못했습니다. 레이팅 보류 판정이 아닙니다.` } });
                         }
                     }
                     saveSuccessfulCache(removedIds);
                 } catch (error) {
                     if (generation !== credentialsGeneration) continue;
+                    // Include batches cancelled by authentication failure so manual retry can recover them.
+                    const failedIds = error.authentication ? [...ids, ...pendingIds] : ids;
                     if (error.authentication) { authenticationFailed = true; pendingIds.clear(); }
                     if (error.retryAfter) nextRequestAt = Math.max(nextRequestAt, Date.now() + error.retryAfter);
-                    for (const id of ids) {
+                    for (const id of failedIds) {
                         refreshRequestedIds.delete(id);
-                        failures.set(id, { failedAt: Date.now(), retryAt: Date.now() + Math.max(CACHE_LIFETIME_MS, error.retryAfter || 0),
+                        failures.set(id, { failedAt: Date.now(),
                             result: { kind: "error", label: error.authentication ? "인증 확인" : "조회 오류", message: error.message } });
                     }
                 } finally {
@@ -552,10 +558,12 @@ SOFTWARE.
                 continue;
             }
             const failure = failures.get(id);
-            const needsRefresh = !entry || entry.expires <= now || refreshRequestedIds.has(id);
-            const canRetry = !failure || failure.retryAt <= now || refreshRequestedIds.has(id);
-            if (allowRequests && (!selectedIds || selectedIds.has(id)) && needsRefresh && canRetry
-                && !authenticationFailed && !inFlightIds.has(id)) pendingIds.add(id);
+            const needsRefresh = refreshRequestedIds.has(id) || (automaticLookupAllowed && !attemptedIds.has(id));
+            if (allowRequests && (!selectedIds || selectedIds.has(id)) && needsRefresh
+                && !authenticationFailed && !inFlightIds.has(id)) {
+                attemptedIds.add(id);
+                pendingIds.add(id);
+            }
             const refreshing = pendingIds.has(id) || inFlightIds.has(id);
             if (entry) {
                 let freshnessLabel = "";
@@ -568,7 +576,7 @@ SOFTWARE.
                     freshnessMessage = `이전 조회 결과입니다. ${failure?.result.message || "API 인증을 확인해 주세요."}`;
                 } else if (needsRefresh) {
                     freshnessLabel = "이전 정보";
-                    freshnessMessage = "유효기간이 지난 조회 결과입니다. 최신 상태와 다를 수 있습니다.";
+                    freshnessMessage = "저장된 조회 결과입니다. 최신 상태와 다를 수 있습니다.";
                 }
                 renderLink(link, id, { ...entry.result, fetchedAt: entry.fetchedAt, freshnessLabel, freshnessMessage });
             } else if (refreshing) {
@@ -577,7 +585,7 @@ SOFTWARE.
                 renderLink(link, id, failure.result);
             } else {
                 renderLink(link, id, { kind: "error", label: authenticationFailed ? "인증 확인" : "조회 대기",
-                    message: authenticationFailed ? "API 인증을 확인해 주세요." : "문제 정보를 아직 조회하지 않았습니다." });
+                    message: authenticationFailed ? "API 인증을 확인해 주세요." : "저장된 정보가 없습니다. 페이지를 새로고침하거나 ‘전체 문제 정보 새로고침’ 메뉴를 사용해 주세요." });
             }
         }
         updateNotice();
@@ -603,8 +611,9 @@ SOFTWARE.
         if (affectsProblems) scheduleScan();
     });
     observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["href"] });
-    window.addEventListener("pageshow", () => {
-        // BFCache may restore this execution context; recheck age without duplicating views/requests.
+    window.addEventListener("pageshow", (event) => {
+        // Restoring a page only restores its display; it never starts a new automatic lookup.
+        if (event.persisted) automaticLookupAllowed = false;
         for (const [id, entry] of readStoredCache()) {
             if ((cache.get(id)?.fetchedAt ?? -1) < entry.fetchedAt) {
                 cache.set(id, entry);
@@ -616,7 +625,5 @@ SOFTWARE.
         }
         scheduleScan();
     });
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleScan(); });
-    setInterval(() => { if (!document.hidden) scheduleScan(); }, 60000);
     scanProblemLinks();
 })();

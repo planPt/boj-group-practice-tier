@@ -13,7 +13,7 @@ async function waitUntil(predicate) {
     assert.fail('Expected state did not appear');
 }
 
-function harness({ ids = ['11641'], credentials = true, respond, timeoutScale = false, storage = new Map(), now, storageThrows = false, onWait } = {}) {
+function harness({ ids = ['11641'], credentials = true, respond, timeoutScale = false, storage = new Map(), now, storageThrows = false, onWait, navigationType = "navigate" } = {}) {
     const links = ids.map(id => `<li><a href="/problem/${id}">${id}</a></li>`).join('');
     const columns = ids.map(id => `<th class="problem_score"><a href="https://www.acmicpc.net/problem/${id}">${id}</a></th>`).join('');
     const dom = new JSDOM(`<html><head></head><body><ul class="sidebar-nav-v1">${links}</ul><div><table id="contest_scoreboard"><thead><tr>${columns}</tr></thead></table></div></body></html>`, {
@@ -28,9 +28,11 @@ function harness({ ids = ['11641'], credentials = true, respond, timeoutScale = 
     w.GM_deleteValue = key => stored.delete(key);
     w.GM_registerMenuCommand = (label, handler) => commands.set(label, handler);
     if (now) w.Date.now = now;
+    w.performance.getEntriesByType = type => type === "navigation" ? [{ type: navigationType }] : [];
     const nativeSetTimeout = w.setTimeout.bind(w);
     w.setTimeout = (callback, ms) => { if (onWait?.(ms)) return 0; return nativeSetTimeout(callback, ms === 20000 ? (timeoutScale ? 50 : 20000) : Math.min(ms, 10)); };
-    w.setInterval = () => 1;
+    const intervals = [];
+    w.setInterval = (callback, ms) => { intervals.push({ callback, ms }); return intervals.length; };
     const requests = [];
     let aborts = 0;
     w.GM_xmlhttpRequest = options => {
@@ -45,7 +47,7 @@ function harness({ ids = ['11641'], credentials = true, respond, timeoutScale = 
         return { abort() { aborts++; options.onabort(); } };
     };
     w.eval(source);
-    return { dom, w, requests, commands, stored, get aborts() { return aborts; }, close: () => dom.window.close() };
+    return { dom, w, requests, commands, stored, intervals, get aborts() { return aborts; }, close: () => dom.window.close() };
 }
 
 test('Both BOJ hosts and absolute links resolve; foreign and malformed links do not', () => {
@@ -213,24 +215,55 @@ function reply(options, problems) {
         responseText: JSON.stringify({ problems, total: problems.length, page: 1, pageSize: 50 }) });
 }
 
-test('A new page instance reuses a fresh persistent cache without any API request', async () => {
-    const storage = new Map();
-    const first = harness({ storage });
-    try {
-        await waitUntil(() => first.w.document.querySelector('[data-state="rated"]'));
-        assert.equal(first.requests.length, 1);
-        assert.equal(storage.get(CACHE_KEY).entries.length, 1);
-    } finally { first.close(); }
-    const second = harness({ storage, respond: () => assert.fail('Revisit must not request fresh data') });
-    try {
-        assert.equal(second.w.document.querySelectorAll('[data-state="rated"]').length, 2);
-        await delay(30);
-        assert.equal(second.requests.length, 0);
-        assert.match(second.w.document.querySelector('.boj-v4-info').dataset.description, /마지막 조회:/);
-    } finally { second.close(); }
+test('New navigation and reload refresh even a recent stored result exactly once', async () => {
+    for (const navigationType of ['navigate', 'reload']) {
+        const now = Date.now();
+        const h = harness({ navigationType, storage: seededStorage([cachedEntry(base, now - 1000)]),
+            now: () => now, respond: () => {} });
+        try {
+            assert.equal(h.w.document.querySelectorAll('[data-state="rated"]').length, 2);
+            assert.match(h.w.document.body.textContent, /갱신 중/);
+            await waitUntil(() => h.requests.length === 1);
+            reply(h.requests[0], [base]);
+            await waitUntil(() => !h.w.document.querySelector('.boj-v4-freshness'));
+            h.w.dispatchEvent(new h.w.PageTransitionEvent('pageshow', { persisted: false }));
+            await delay(30);
+            assert.equal(h.requests.length, 1);
+            assert.equal(h.stored.get(CACHE_KEY).entries[0].fetchedAt, now);
+        } finally { h.close(); }
+    }
 });
 
-test('Expired but retained result stays visible during refresh and updates rating and timestamp', async () => {
+test('History document reconstruction reuses old or recent cache without requests', async () => {
+    for (const age of [1000, fiveMinutes * 10]) {
+        const h = harness({ navigationType: 'back_forward',
+            storage: seededStorage([cachedEntry(base, Date.now() - age)]),
+            respond: () => assert.fail('History restoration must not request') });
+        try {
+            assert.equal(h.w.document.querySelectorAll('[data-state="rated"]').length, 2);
+            h.w.dispatchEvent(new h.w.PageTransitionEvent('pageshow', { persisted: false }));
+            await delay(30);
+            assert.equal(h.requests.length, 0);
+            assert.match(h.w.document.querySelector('.boj-v4-info').dataset.description, /마지막 조회:/);
+        } finally { h.close(); }
+    }
+});
+
+test('History with no usable cache explains manual refresh and allows it', async () => {
+    const h = harness({ navigationType: 'back_forward', storage: seededStorage([cachedEntry(base, Date.now() - day)]), respond: () => {} });
+    try {
+        await delay(30);
+        assert.equal(h.requests.length, 0);
+        assert.equal(h.w.document.querySelectorAll('[data-state="rated"]').length, 0);
+        assert.match(h.w.document.querySelector('.boj-v4-info').dataset.description, /새로고침/);
+        h.commands.get('전체 문제 정보 새로고침')();
+        await waitUntil(() => h.requests.length === 1);
+        reply(h.requests[0], [base]);
+        await waitUntil(() => h.w.document.querySelector('[data-state="rated"]'));
+    } finally { h.close(); }
+});
+
+test('Previously stored result stays visible during refresh and updates rating and timestamp', async () => {
     const now = Date.now(), fetchedAt = now - fiveMinutes - 1000;
     const h = harness({ storage: seededStorage([cachedEntry(base, fetchedAt)]), now: () => now, respond: () => {} });
     try {
@@ -262,26 +295,27 @@ test('Refresh failure preserves prior result, last fetch time, and failure reaso
     } finally { h.close(); }
 });
 
-test('Retry sends only failed IDs even if a previously successful result has since expired', async () => {
+test('Retry sends only failed IDs without requerying successful results after time passes', async () => {
     let now = Date.now();
-    const other = live.find(p => p.problemId === 31333);
-    const storage = seededStorage([cachedEntry(base, now), cachedEntry(other, now - fiveMinutes - 1)]);
-    const h = harness({ ids: [String(base.problemId), String(other.problemId)], storage, now: () => now,
-        respond: (req, count) => count === 1 ? req.onload({ status: 503 }) : reply(req, [other]) });
+    const ids = live.slice(0, 6).map(p => String(p.problemId));
+    const h = harness({ ids, now: () => now, respond: (req, count) => {
+        if (count === 1) reply(req, live.slice(0, 5));
+        else if (count === 2) req.onload({ status: 503 });
+        else reply(req, [live[5]]);
+    }});
     try {
-        await waitUntil(() => h.w.document.body.textContent.includes('갱신 실패'));
-        now += fiveMinutes + 1;
+        await waitUntil(() => h.w.document.querySelector('#boj-v4-notice button'));
+        now += fiveMinutes * 10;
         h.w.document.querySelector('#boj-v4-notice button').click();
-        await waitUntil(() => h.requests.length === 2 && !h.w.document.querySelector('#boj-v4-notice'));
+        await waitUntil(() => h.requests.length === 3 && !h.w.document.querySelector('#boj-v4-notice'));
         await delay(30);
-        assert.equal(h.requests.length, 2);
-        for (const req of h.requests) assert.equal(new URL(req.url).searchParams.get('q'), 'id:b31333');
-        assert.equal(h.w.document.querySelectorAll('[data-state="rated"]').length, 2);
+        assert.equal(h.requests.length, 3);
+        assert.equal(new URL(h.requests[2].url).searchParams.get('q'), `id:b${ids[5]}`);
     } finally { h.close(); }
 });
 
 test('Whole refresh explicitly refreshes successes without hiding their prior tier', async () => {
-    const h = harness({ storage: seededStorage([cachedEntry(base, Date.now())]), respond: () => {} });
+    const h = harness({ navigationType: 'back_forward', storage: seededStorage([cachedEntry(base, Date.now())]), respond: () => {} });
     try {
         assert.equal(h.requests.length, 0);
         h.commands.get('전체 문제 정보 새로고침')();
@@ -343,21 +377,39 @@ test('Storage quota failures do not turn a successful API response into a displa
     } finally { h.close(); }
 });
 
-test('Repeated pageshow restores only one set of badges and one stale refresh request', async () => {
+test('BFCache restoration, visibility changes and mutations do not refresh after five minutes', async () => {
     let now = Date.now();
-    const h = harness({ storage: seededStorage([cachedEntry(base, now)]), now: () => now, respond: () => {} });
+    const h = harness({ now: () => now });
     try {
-        h.w.dispatchEvent(new h.w.PageTransitionEvent('pageshow', { persisted: true }));
-        await delay(30);
-        assert.equal(h.requests.length, 0);
-        now += fiveMinutes + 1;
+        await waitUntil(() => h.w.document.querySelector('[data-state="rated"]'));
+        now += fiveMinutes * 10;
         for (let i = 0; i < 3; i++) h.w.dispatchEvent(new h.w.PageTransitionEvent('pageshow', { persisted: true }));
-        await waitUntil(() => h.requests.length === 1);
-        await delay(30);
+        h.w.document.dispatchEvent(new h.w.Event('visibilitychange'));
+        h.w.document.body.append(h.w.document.createElement('div'));
+        for (const interval of h.intervals) interval.callback();
+        await delay(40);
         assert.equal(h.requests.length, 1);
+        assert.equal(h.intervals.length, 0);
         assert.equal(h.w.document.querySelectorAll('.boj-v4-info').length, 2);
         assert.equal(h.w.document.querySelectorAll('[data-state="rated"]').length, 2);
     } finally { h.close(); }
+});
+
+test('An active page never polls or retries failures after time, focus or unrelated DOM changes', async () => {
+    for (const status of [200, 503]) {
+        let now = Date.now();
+        const h = harness({ now: () => now, respond: req => status === 200 ? reply(req, [base]) : req.onload({ status }) });
+        try {
+            await waitUntil(() => status === 200 ? h.w.document.querySelector('[data-state="rated"]') : h.w.document.querySelector('#boj-v4-notice'));
+            now += fiveMinutes * 10;
+            h.w.document.dispatchEvent(new h.w.Event('visibilitychange'));
+            h.w.document.body.append(h.w.document.createElement('div'));
+            for (const interval of h.intervals) interval.callback();
+            await delay(40);
+            assert.equal(h.requests.length, 1);
+            assert.equal(h.intervals.length, 0);
+        } finally { h.close(); }
+    }
 });
 
 test('Key replacement discards the old response and requests with the replacement credentials', async () => {
@@ -408,7 +460,7 @@ test('Saving another result preserves a newer stored entry from a sequential tab
     const now = Date.now();
     const other = live.find(p => p.problemId === 31333);
     const storage = seededStorage([cachedEntry(base, now - 1000), cachedEntry(other, now - fiveMinutes - 1)]);
-    const h = harness({ ids: ['11641', '31333'], storage, now: () => now, respond: () => {} });
+    const h = harness({ ids: ['31333'], storage, now: () => now, respond: () => {} });
     try {
         await waitUntil(() => h.requests.length === 1);
         storage.get(CACHE_KEY).entries[0] = cachedEntry({ ...base, level: 20 }, now - 500);
@@ -436,5 +488,23 @@ test('pageshow clears an obsolete failure when a newer successful result was sto
         h.commands.get('실패한 문제만 재시도')();
         await delay(20);
         assert.equal(h.requests.length, 1);
+    } finally { h.close(); }
+});
+
+
+test('Retry after authentication failure also recovers batches cancelled before transmission', async () => {
+    const h = harness({ ids: live.map(p => String(p.problemId)), respond: (req, count) => {
+        if (count === 1) req.onload({ status: 401 });
+        else {
+            const ids = [...new URL(req.url).searchParams.get('q').matchAll(/id:b(\d+)/g)].map(m => m[1]);
+            reply(req, live.filter(p => ids.includes(String(p.problemId))));
+        }
+    }});
+    try {
+        await waitUntil(() => h.w.document.querySelector('#boj-v4-notice'));
+        h.commands.get('실패한 문제만 재시도')();
+        await waitUntil(() => h.requests.length === 3 && !h.w.document.querySelector('#boj-v4-notice'));
+        assert.equal(h.w.document.querySelectorAll('.boj-v4-icon').length, 20);
+        assert.doesNotMatch(h.w.document.body.textContent, /조회 대기|조회 중|인증 확인/);
     } finally { h.close(); }
 });
